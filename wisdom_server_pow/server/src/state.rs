@@ -1,4 +1,6 @@
 use simple_error::{bail, SimpleError};
+use super::Response;
+use super::challenge;
 
 pub struct ConnectionState<T> {
     state: T,
@@ -14,18 +16,21 @@ impl ConnectionState<Connected> {
             state: Connected {},
         }
     }
-    fn process(&self, line: &str) -> Result<(), SimpleError> {
-        println!("connected, line: {:?}", line);
+    fn process(&self, line: &str) -> Result<Response, SimpleError> {
+        println!("connected, got: {:?}", line);
         if line == "GET" {
-            return Ok(());
+            return Ok(challenge::create());
         }
         bail!("invalid command");
     }
 }
 impl ConnectionState<Challenge> {
-    fn process(&self, line: &str) -> Result<(), SimpleError> {
-        println!("challenge, line: {:?}", line);
-        Ok(())
+    fn process(&self, line: &str) -> Result<Response, SimpleError> {
+        println!("challenge, got: {:?}", line);
+        if let Ok(()) = challenge::verify(line) {
+            return Ok("Correct".to_string());
+        }
+        bail!("challenge verificaton failed");
     }
 }
 
@@ -71,11 +76,11 @@ impl StateWrapper {
             StateWrapper::Done(val) => StateWrapper::Done(val),
         }
     }
-    pub fn process(&self, line: &str) -> Result<(), SimpleError> {
+    pub fn process(&self, line: &str) -> Result<Response, SimpleError> {
         match self {
             StateWrapper::Connected(val) => val.process(line),
             StateWrapper::Challenge(val) => val.process(line),
-            StateWrapper::Done(_) => Ok(()),
+            StateWrapper::Done(_) => Ok("BYE".to_string()),
         }
     }
     pub fn done(&self) -> bool {

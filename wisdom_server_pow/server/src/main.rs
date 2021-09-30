@@ -1,3 +1,4 @@
+use futures::SinkExt;
 use std::error::Error;
 use simple_error::{bail, SimpleError};
 use tokio::net::TcpStream;
@@ -5,12 +6,15 @@ use tokio_stream::StreamExt;
 use tokio_util::codec::{Framed, LinesCodec};
 
 mod state;
+mod challenge;
 
 use crate::state::State;
 
-async fn process<F>(lines: &mut Framed<TcpStream, LinesCodec>, action: F) -> Result<(), SimpleError>
+type Response = String;
+
+async fn process<F>(lines: &mut Framed<TcpStream, LinesCodec>, action: F) -> Result<Response, SimpleError>
 where
-    F: FnOnce(&str) -> Result<(), SimpleError>,
+    F: FnOnce(&str) -> Result<Response, SimpleError>,
 {
     if let Some(result) = lines.next().await {
         match result {
@@ -40,7 +44,13 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 
             while !current.state.done() { 
                 match process(&mut data, |line| current.state.process(line)).await {
-                    Ok(()) => current.state = current.state.next(),
+                    Ok(response) => {
+                        if let Err(err) = data.send(response.as_str()).await {
+                            eprintln!("error: {}", err);
+                            break;
+                        }
+                        current.state = current.state.next();
+                    },
                     Err(err) => {
                         eprintln!("error: {}", err);
                         break;
