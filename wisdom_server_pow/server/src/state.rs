@@ -3,6 +3,7 @@ use super::db::Db;
 use super::Response;
 
 use simple_error::{bail, SimpleError};
+use rand::Rng;
 
 pub struct ConnectionState<T> {
     state: T,
@@ -37,7 +38,7 @@ impl ConnectionState<Challenge> {
     }
 
     fn get_quote(db: &Db) -> Result<Response, SimpleError> {
-        let n = 0;
+        let n = rand::thread_rng().gen_range(0..db.num_quotes());
         if let Some(quote) = db.get_quote(n) {
             return Ok(quote.to_string());
         }
