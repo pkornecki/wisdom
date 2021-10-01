@@ -7,7 +7,6 @@ use tokio::net::TcpStream;
 use tokio_stream::StreamExt;
 use tokio_util::codec::{Framed, LinesCodec};
 
-mod challenge;
 mod db;
 mod state;
 

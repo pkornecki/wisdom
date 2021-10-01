@@ -1,4 +1,4 @@
-use super::challenge::Challenge;
+use common::challenge::Challenge;
 use super::db::Db;
 use super::Response;
 
