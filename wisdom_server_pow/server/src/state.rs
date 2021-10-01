@@ -24,7 +24,7 @@ impl ConnectionState<Connected> {
     fn process(&mut self, line: &str, _db: &Db) -> Result<Response, SimpleError> {
         println!("connected, got: {:?}", line);
         if line == "GET" {
-            self.challenge = Some(Challenge::new(20));
+            self.challenge = Some(Challenge::new(2));
             return Ok(format!("SLV {}", self.challenge.as_ref().unwrap().to_string()));
         }
         bail!("invalid command");

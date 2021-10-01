@@ -9,6 +9,7 @@ authors = ["pkornecki@gmail.com"]
 [dependencies]
 futures = "0.3.17"
 rand = "0.8.4"
+sha1 = "0.6.0"
 simple-error = "0.2.3"
 tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1.7"
