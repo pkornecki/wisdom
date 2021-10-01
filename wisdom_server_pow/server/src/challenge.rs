@@ -43,6 +43,26 @@ impl Challenge {
         Ok(())
     }
 
+    pub fn solve(challenge: &str) -> Result<Self, Box<dyn Error>> {
+        let mut answer = Self::from_str(&challenge)?;
+        let pattern = (0..answer.num_zeros).map(|_| "0").collect::<String>();
+        let mut sha1 = Sha1::new();
+
+        loop {
+            sha1.reset();
+            sha1.update(answer.to_string().as_bytes());
+            let digest = sha1.digest().to_string();
+
+            if digest.starts_with(&pattern) {
+                break;
+            }
+
+            answer.counter += 1;
+        }
+
+        Ok(answer)
+    }
+
     fn generate_random_text() -> String {
         rand::thread_rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect()
     }
