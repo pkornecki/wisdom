@@ -1,4 +1,4 @@
-use super::challenge;
+use super::challenge::Challenge;
 use super::db::Db;
 use super::Response;
 
@@ -6,32 +6,35 @@ use simple_error::{bail, SimpleError};
 use rand::Rng;
 
 pub struct ConnectionState<T> {
+    challenge: Option<Challenge>,
     state: T,
 }
 
 pub struct Connected {}
-pub struct Challenge {}
+pub struct ChallengeSent {}
 pub struct Done {}
 
 impl ConnectionState<Connected> {
     fn new() -> Self {
         ConnectionState {
+            challenge: None,
             state: Connected {},
         }
     }
-    fn process(&self, line: &str, _db: &Db) -> Result<Response, SimpleError> {
+    fn process(&mut self, line: &str, _db: &Db) -> Result<Response, SimpleError> {
         println!("connected, got: {:?}", line);
         if line == "GET" {
-            return Ok(challenge::create());
+            self.challenge = Some(Challenge::new(20));
+            return Ok(format!("SLV {}", self.challenge.as_ref().unwrap().to_string()));
         }
         bail!("invalid command");
     }
 }
 
-impl ConnectionState<Challenge> {
-    fn process(&self, line: &str, db: &Db) -> Result<Response, SimpleError> {
+impl ConnectionState<ChallengeSent> {
+    fn process(&mut self, line: &str, db: &Db) -> Result<Response, SimpleError> {
         println!("challenge, got: {:?}", line);
-        if let Ok(()) = challenge::verify(line) {
+        if let Ok(()) = self.challenge.as_ref().expect("challenge missing").verify(line) {
             return Self::get_quote(&db);
         }
         bail!("challenge verificaton failed");
@@ -46,25 +49,27 @@ impl ConnectionState<Challenge> {
     }
 }
 
-impl From<ConnectionState<Connected>> for ConnectionState<Challenge> {
-    fn from(val: ConnectionState<Connected>) -> ConnectionState<Challenge> {
+impl From<ConnectionState<Connected>> for ConnectionState<ChallengeSent> {
+    fn from(val: ConnectionState<Connected>) -> ConnectionState<ChallengeSent> {
         ConnectionState {
-            state: Challenge {}
+            challenge: val.challenge,
+            state: ChallengeSent {},
         }
     }
 }
 
-impl From<ConnectionState<Challenge>> for ConnectionState<Done> {
-    fn from(val: ConnectionState<Challenge>) -> ConnectionState<Done> {
+impl From<ConnectionState<ChallengeSent>> for ConnectionState<Done> {
+    fn from(val: ConnectionState<ChallengeSent>) -> ConnectionState<Done> {
         ConnectionState {
-            state: Done {}
+            challenge: val.challenge,
+            state: Done {},
         }
     }
 }
 
 pub enum StateWrapper {
     Connected(ConnectionState<Connected>),
-    Challenge(ConnectionState<Challenge>),
+    ChallengeSent(ConnectionState<ChallengeSent>),
     Done(ConnectionState<Done>),
 }
 
@@ -83,15 +88,15 @@ impl State {
 impl StateWrapper {
     pub fn next(self) -> Self {
         match self {
-            StateWrapper::Connected(val) => StateWrapper::Challenge(val.into()),
-            StateWrapper::Challenge(val) => StateWrapper::Done(val.into()),
+            StateWrapper::Connected(val) => StateWrapper::ChallengeSent(val.into()),
+            StateWrapper::ChallengeSent(val) => StateWrapper::Done(val.into()),
             StateWrapper::Done(val) => StateWrapper::Done(val),
         }
     }
-    pub fn process(&self, line: &str, db: &Db) -> Result<Response, SimpleError> {
+    pub fn process(&mut self, line: &str, db: &Db) -> Result<Response, SimpleError> {
         match self {
             StateWrapper::Connected(val) => val.process(line, db),
-            StateWrapper::Challenge(val) => val.process(line, db),
+            StateWrapper::ChallengeSent(val) => val.process(line, db),
             StateWrapper::Done(_) => Ok("BYE".to_string()),
         }
     }
