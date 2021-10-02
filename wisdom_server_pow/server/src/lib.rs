@@ -17,7 +17,7 @@ use crate::state::State;
 // it could be a struct encapsulating some specific fields as well
 type Response = String;
 
-pub async fn run(listener: TcpListener, db: Arc<Db>) -> Result<(), Box<dyn Error>> {
+pub async fn run(listener: TcpListener, db: Arc<Db>, difficulty: u8) -> Result<(), Box<dyn Error>> {
    // keep the track of a number of connections established
     let mut connection_id: u128 = 0;
 
@@ -42,7 +42,7 @@ pub async fn run(listener: TcpListener, db: Arc<Db>) -> Result<(), Box<dyn Error
 
                 // iterate through the states
                 'inner: loop {
-                    match process(&mut data, |line| current.state.process(line, &db), connection_id,) .await {
+                    match process(&mut data, |line| current.state.process(line, &db, difficulty), connection_id,) .await {
                         Ok(response) => {
                             if let Some(response) = response {
                                 if let Err(err) = data.send(response.as_str()).await {

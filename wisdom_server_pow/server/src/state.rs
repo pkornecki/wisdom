@@ -22,10 +22,10 @@ impl ConnectionState<Connected> {
         }
     }
 
-    fn process(&mut self, line: &str, _db: &Db) -> Result<Option<Response>, SimpleError> {
+    fn process(&mut self, line: &str, _db: &Db, difficulty: u8) -> Result<Option<Response>, SimpleError> {
         println!("connected, got: {:?}", line);
         if line == "GET" {
-            self.challenge = Some(Challenge::new(5));
+            self.challenge = Some(Challenge::new(difficulty));
             return Ok(Some(format!(
                 "SLV {}",
                 self.challenge.as_ref().unwrap().to_string()
@@ -37,7 +37,7 @@ impl ConnectionState<Connected> {
 }
 
 impl ConnectionState<ChallengeSent> {
-    fn process(&mut self, line: &str, db: &Db) -> Result<Option<Response>, SimpleError> {
+    fn process(&mut self, line: &str, db: &Db, _difficulty: u8) -> Result<Option<Response>, SimpleError> {
         println!("challenge, got: {:?}", line);
         if let Ok(()) = self
             .challenge
@@ -65,7 +65,7 @@ impl ConnectionState<ChallengeSent> {
 }
 
 impl ConnectionState<Done> {
-    fn process(&mut self, line: &str, _db: &Db) -> Result<Option<Response>, SimpleError> {
+    fn process(&mut self, line: &str, _db: &Db, _difficulty: u8) -> Result<Option<Response>, SimpleError> {
         println!("done, got: {:?}", line);
         Ok(None)
     }
@@ -124,11 +124,11 @@ impl StateWrapper {
             StateWrapper::Done(val) => StateWrapper::Connected(val.into()),
         }
     }
-    pub fn process(&mut self, line: &str, db: &Db) -> Result<Option<Response>, SimpleError> {
+    pub fn process(&mut self, line: &str, db: &Db, difficulty: u8) -> Result<Option<Response>, SimpleError> {
         match self {
-            StateWrapper::Connected(val) => val.process(line, db),
-            StateWrapper::ChallengeSent(val) => val.process(line, db),
-            StateWrapper::Done(val) => val.process(line, db),
+            StateWrapper::Connected(val) => val.process(line, db, difficulty),
+            StateWrapper::ChallengeSent(val) => val.process(line, db, difficulty),
+            StateWrapper::Done(val) => val.process(line, db, difficulty),
         }
     }
 }
