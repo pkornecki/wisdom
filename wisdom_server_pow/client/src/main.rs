@@ -1,6 +1,6 @@
 use tokio::io::AsyncWriteExt;
-use tokio::io::{AsyncBufRead, AsyncBufReadExt};
 use tokio::io::BufReader;
+use tokio::io::{AsyncBufRead, AsyncBufReadExt};
 use tokio::net::TcpStream;
 
 use std::error::Error;
@@ -10,7 +10,7 @@ use common::challenge::Challenge;
 // parse the response from the server
 async fn parse<T>(stream: &mut T) -> Result<String, Box<dyn Error>>
 where
-    T: AsyncBufRead + std::marker::Unpin
+    T: AsyncBufRead + std::marker::Unpin,
 {
     // read the line from a stream
     let mut line = String::new();
@@ -25,8 +25,8 @@ where
         "SLV" => content,
         "QUO" => {
             // remove the new line
-            &content[..content.len()-1]
-        },
+            &content[..content.len() - 1]
+        }
         _ => "unknown command\n",
     };
 
@@ -47,21 +47,26 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     // create an object for reading and writing from/to the stream
     let mut stream = BufReader::new(stream);
 
-    // send a request
-    stream.write_all(b"GET\n").await?;
+    loop {
+        // send a request
+        stream.write_all(b"GET\n").await?;
 
-    // parse the response
-    let challenge = parse(&mut stream).await?;
+        // parse the response
+        let challenge = parse(&mut stream).await?;
 
-    // solve the challenge
-    let answer = solve(&challenge)?;
-    stream.write_all(answer.as_bytes()).await?;
+        // solve the challenge
+        let answer = solve(&challenge)?;
+        stream.write_all(answer.as_bytes()).await?;
 
-    // parse the response
-    let result = parse(&mut stream).await?;
+        // parse the response
+        let result = parse(&mut stream).await?;
 
-    // present the result
-    println!("{}", result);
+        // present the result
+        println!("{}", result);
+
+        // send confirmation
+        stream.write_all(b"THX\n").await?;
+    }
 
     Ok(())
 }

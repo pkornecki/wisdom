@@ -1,9 +1,9 @@
-use common::challenge::Challenge;
 use super::db::Db;
 use super::Response;
+use common::challenge::Challenge;
 
-use simple_error::{bail, SimpleError};
 use rand::Rng;
+use simple_error::{bail, SimpleError};
 
 pub struct ConnectionState<T> {
     challenge: Option<Challenge>,
@@ -21,22 +21,30 @@ impl ConnectionState<Connected> {
             state: Connected {},
         }
     }
-    fn process(&mut self, line: &str, _db: &Db) -> Result<Response, SimpleError> {
+    fn process(&mut self, line: &str, _db: &Db) -> Result<Option<Response>, SimpleError> {
         println!("connected, got: {:?}", line);
         if line == "GET" {
             self.challenge = Some(Challenge::new(4));
-            return Ok(format!("SLV {}", self.challenge.as_ref().unwrap().to_string()));
+            return Ok(Some(format!(
+                "SLV {}",
+                self.challenge.as_ref().unwrap().to_string()
+            )));
         }
         bail!("invalid command");
     }
 }
 
 impl ConnectionState<ChallengeSent> {
-    fn process(&mut self, line: &str, db: &Db) -> Result<Response, SimpleError> {
+    fn process(&mut self, line: &str, db: &Db) -> Result<Option<Response>, SimpleError> {
         println!("challenge, got: {:?}", line);
-        if let Ok(()) = self.challenge.as_ref().expect("challenge missing").verify(line) {
+        if let Ok(()) = self
+            .challenge
+            .as_ref()
+            .expect("challenge missing")
+            .verify(line)
+        {
             let quote = Self::get_quote(&db)?;
-            return Ok(format!("QUO {}", quote));
+            return Ok(Some(format!("QUO {}", quote)));
         }
         bail!("challenge verificaton failed");
     }
@@ -47,6 +55,13 @@ impl ConnectionState<ChallengeSent> {
             return Ok(quote.to_string());
         }
         bail!("can't get quote from the db")
+    }
+}
+
+impl ConnectionState<Done> {
+    fn process(&mut self, line: &str, _db: &Db) -> Result<Option<Response>, SimpleError> {
+        println!("done, got: {:?}", line);
+        Ok(None)
     }
 }
 
@@ -64,6 +79,15 @@ impl From<ConnectionState<ChallengeSent>> for ConnectionState<Done> {
         ConnectionState {
             challenge: val.challenge,
             state: Done {},
+        }
+    }
+}
+
+impl From<ConnectionState<Done>> for ConnectionState<Connected> {
+    fn from(_val: ConnectionState<Done>) -> ConnectionState<Connected> {
+        ConnectionState {
+            challenge: None,
+            state: Connected {},
         }
     }
 }
@@ -91,21 +115,14 @@ impl StateWrapper {
         match self {
             StateWrapper::Connected(val) => StateWrapper::ChallengeSent(val.into()),
             StateWrapper::ChallengeSent(val) => StateWrapper::Done(val.into()),
-            StateWrapper::Done(val) => StateWrapper::Done(val),
+            StateWrapper::Done(val) => StateWrapper::Connected(val.into()),
         }
     }
-    pub fn process(&mut self, line: &str, db: &Db) -> Result<Response, SimpleError> {
+    pub fn process(&mut self, line: &str, db: &Db) -> Result<Option<Response>, SimpleError> {
         match self {
             StateWrapper::Connected(val) => val.process(line, db),
             StateWrapper::ChallengeSent(val) => val.process(line, db),
-            StateWrapper::Done(_) => Ok("BYE".to_string()),
+            StateWrapper::Done(val) => val.process(line, db),
         }
-    }
-    pub fn done(&self) -> bool {
-        if let StateWrapper::Done(_) = self {
-            return true;
-        }
-        false
     }
 }
-

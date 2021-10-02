@@ -1,8 +1,8 @@
 use futures::SinkExt;
+use simple_error::{bail, SimpleError};
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::Arc;
-use simple_error::{bail, SimpleError};
 use tokio::net::TcpStream;
 use tokio_stream::StreamExt;
 use tokio_util::codec::{Framed, LinesCodec};
@@ -17,9 +17,12 @@ use crate::state::State;
 // it could be a struct encapsulating some specific fields as well
 type Response = String;
 
-async fn process<F>(lines: &mut Framed<TcpStream, LinesCodec>, action: F) -> Result<Response, SimpleError>
+async fn process<F>(
+    lines: &mut Framed<TcpStream, LinesCodec>,
+    action: F,
+) -> Result<Option<Response>, SimpleError>
 where
-    F: FnOnce(&str) -> Result<Response, SimpleError>,
+    F: FnOnce(&str) -> Result<Option<Response>, SimpleError>,
 {
     if let Some(result) = lines.next().await {
         match result {
@@ -52,26 +55,29 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
             // decode the data
             let mut data = Framed::new(socket, LinesCodec::new());
 
-            // initiate a new state
-            let mut current = State::new();
+            'outer: loop {
+                // initiate a new state
+                let mut current = State::new();
 
-            // iterate through the states
-            while !current.state.done() { 
-                match process(&mut data, |line| current.state.process(line, &db)).await {
-                    Ok(response) => {
-                        if let Err(err) = data.send(response.as_str()).await {
-                            eprintln!("error: {}", err);
-                            break;
+                // iterate through the states
+                'inner: loop {
+                    match process(&mut data, |line| current.state.process(line, &db)).await {
+                        Ok(response) => {
+                            if let Some(response) = response {
+                                if let Err(err) = data.send(response.as_str()).await {
+                                    eprintln!("error: {}", err);
+                                    break 'inner;
+                                }
+                            }
+                            current.state = current.state.next();
                         }
-                        current.state = current.state.next();
-                    },
-                    Err(err) => {
-                        eprintln!("error: {}", err);
-                        break;
+                        Err(err) => {
+                            eprintln!("error: {}", err);
+                            break 'outer;
+                        }
                     }
                 }
             }
-
             println!("connection closed");
         });
     }

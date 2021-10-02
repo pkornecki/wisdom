@@ -10,7 +10,7 @@ pub struct Db {
 impl Db {
     pub fn new(filename: impl AsRef<Path>) -> Self {
         Db {
-            content: Self::read(filename).expect("error reading the contents of db")
+            content: Self::read(filename).expect("error reading the contents of db"),
         }
     }
 
