@@ -16,7 +16,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
         io::Write::flush(&mut io::stdout())?;
 
         let choice: String = read!("{}\n");
-        let choice = choice.to_lowercase();
+        let choice = choice.trim().to_lowercase();
         if choice != "y" && choice != "yes" {
             break;
         }
