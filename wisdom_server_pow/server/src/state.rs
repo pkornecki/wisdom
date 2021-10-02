@@ -24,7 +24,7 @@ impl ConnectionState<Connected> {
     fn process(&mut self, line: &str, _db: &Db) -> Result<Response, SimpleError> {
         println!("connected, got: {:?}", line);
         if line == "GET" {
-            self.challenge = Some(Challenge::new(5));
+            self.challenge = Some(Challenge::new(4));
             return Ok(format!("SLV {}", self.challenge.as_ref().unwrap().to_string()));
         }
         bail!("invalid command");
@@ -35,7 +35,8 @@ impl ConnectionState<ChallengeSent> {
     fn process(&mut self, line: &str, db: &Db) -> Result<Response, SimpleError> {
         println!("challenge, got: {:?}", line);
         if let Ok(()) = self.challenge.as_ref().expect("challenge missing").verify(line) {
-            return Self::get_quote(&db);
+            let quote = Self::get_quote(&db)?;
+            return Ok(format!("QUO {}", quote));
         }
         bail!("challenge verificaton failed");
     }
