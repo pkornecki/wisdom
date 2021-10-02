@@ -1,6 +1,7 @@
 use super::db::Db;
 use super::Response;
 use common::challenge::Challenge;
+use common::command::Command;
 
 use rand::Rng;
 use simple_error::{bail, SimpleError};
@@ -24,10 +25,11 @@ impl ConnectionState<Connected> {
 
     fn process(&mut self, line: &str, _db: &Db, difficulty: u8) -> Result<Option<Response>, SimpleError> {
         println!("connected, got: {:?}", line);
-        if line == "GET" {
+        if line == Command::GET.to_string() {
             self.challenge = Some(Challenge::new(difficulty));
             return Ok(Some(format!(
-                "SLV {}",
+                "{} {}",
+                Command::SLV,
                 self.challenge.as_ref().unwrap().to_string()
             )));
         }
@@ -46,7 +48,7 @@ impl ConnectionState<ChallengeSent> {
             .verify(line)
         {
             let quote = Self::get_quote(&db)?;
-            return Ok(Some(format!("QUO {}", quote)));
+            return Ok(Some(format!("{} {}", Command::QUO, quote)));
         }
 
         bail!("challenge verificaton failed");

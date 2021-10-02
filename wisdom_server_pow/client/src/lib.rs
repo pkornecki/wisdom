@@ -2,13 +2,14 @@ use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncWriteExt};
 use std::error::Error;
 
 use common::challenge::Challenge;
+use common::command::Command;
 
 pub async fn get_quote<T>(stream: &mut T) -> Result<String, Box<dyn Error>>
 where
     T: AsyncBufRead + AsyncWriteExt + std::marker::Unpin,
 {
         // send a request
-        stream.write_all(b"GET\n").await?;
+        stream.write_all(format!("{}\n", Command::GET).as_bytes()).await?;
 
         // parse the response
         let challenge = parse(stream).await?;
@@ -21,7 +22,7 @@ where
         let result = parse(stream).await?;
 
         // send the confirmation
-        stream.write_all(b"THX\n").await?;
+        stream.write_all(format!("{}\n", Command::THX).as_bytes()).await?;
 
         Ok(result)
 }
@@ -40,13 +41,13 @@ where
     let content = &line[4..];
 
     // parse the command
-    let result = match command {
-        "SLV" => content,
-        "QUO" => {
-            // remove the new line
-            &content[..content.len() - 1]
-        }
-        _ => "unknown command\n",
+    let result = if command == Command::SLV.to_string() {
+        content
+    } else if command == Command::QUO.to_string() {
+        // remove the new line
+        &content[..content.len() - 1]
+    } else {
+        "unknown command"
     };
 
     Ok(result.to_string())
