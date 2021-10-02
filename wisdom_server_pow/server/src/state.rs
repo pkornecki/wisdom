@@ -21,6 +21,7 @@ impl ConnectionState<Connected> {
             state: Connected {},
         }
     }
+
     fn process(&mut self, line: &str, _db: &Db) -> Result<Option<Response>, SimpleError> {
         println!("connected, got: {:?}", line);
         if line == "GET" {
@@ -30,6 +31,7 @@ impl ConnectionState<Connected> {
                 self.challenge.as_ref().unwrap().to_string()
             )));
         }
+
         bail!("invalid command");
     }
 }
@@ -46,14 +48,18 @@ impl ConnectionState<ChallengeSent> {
             let quote = Self::get_quote(&db)?;
             return Ok(Some(format!("QUO {}", quote)));
         }
+
         bail!("challenge verificaton failed");
     }
 
     fn get_quote(db: &Db) -> Result<Response, SimpleError> {
-        let n = rand::thread_rng().gen_range(0..db.num_quotes());
+        // ignore first row as it is a header
+        let n = rand::thread_rng().gen_range(1..db.num_quotes());
+
         if let Some(quote) = db.get_quote(n) {
             return Ok(quote.to_string());
         }
+
         bail!("can't get quote from the db")
     }
 }
