@@ -8,6 +8,7 @@ mod cli;
 use server::db::Db;
 use cli::CommandLineArgs;
 
+/// an entry point of the application
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn Error>> {
     // get the command line arguments
@@ -24,5 +25,6 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     // as all tasks need read-only access
     let db = Arc::new(Db::new(words));
 
+    // run the server
     server::run(listener, db, difficulty).await
 }

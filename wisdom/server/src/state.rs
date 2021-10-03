@@ -6,13 +6,19 @@ use common::command::Command;
 use rand::Rng;
 use simple_error::{bail, SimpleError};
 
+/// a struct that keeps track of the state the connection is in
 pub struct ConnectionState<T> {
     challenge: Option<Challenge>,
     _state: T,
 }
 
+/// a client established a connection
 pub struct Connected {}
+
+/// the challenge was sent to the client
 pub struct ChallengeSent {}
+
+/// a quote was sent to the client
 pub struct Done {}
 
 impl ConnectionState<Connected> {
@@ -73,6 +79,11 @@ impl ConnectionState<Done> {
     }
 }
 
+// implement the transitions for each state
+// note: for transitions not listed here are lead to a compilation error
+// for example: Connected -> Done will trigger a compiler error
+
+// the transition from the Connected to the ChallengeSent state
 impl From<ConnectionState<Connected>> for ConnectionState<ChallengeSent> {
     fn from(val: ConnectionState<Connected>) -> ConnectionState<ChallengeSent> {
         ConnectionState {
@@ -82,6 +93,7 @@ impl From<ConnectionState<Connected>> for ConnectionState<ChallengeSent> {
     }
 }
 
+// the transition from the ChallengeSent to the Done state
 impl From<ConnectionState<ChallengeSent>> for ConnectionState<Done> {
     fn from(val: ConnectionState<ChallengeSent>) -> ConnectionState<Done> {
         ConnectionState {
@@ -91,6 +103,7 @@ impl From<ConnectionState<ChallengeSent>> for ConnectionState<Done> {
     }
 }
 
+// the transition from the Done to the Connected state
 impl From<ConnectionState<Done>> for ConnectionState<Connected> {
     fn from(_val: ConnectionState<Done>) -> ConnectionState<Connected> {
         ConnectionState {
@@ -100,17 +113,21 @@ impl From<ConnectionState<Done>> for ConnectionState<Connected> {
     }
 }
 
+/// an enum specifying states
 pub enum StateWrapper {
     Connected(ConnectionState<Connected>),
     ChallengeSent(ConnectionState<ChallengeSent>),
     Done(ConnectionState<Done>),
 }
 
+/// a struct that holds a StateWrapper instance
 pub struct State {
+    /// wrapper of the state
     pub state: StateWrapper,
 }
 
 impl State {
+    /// creates a new State instance
     pub fn new() -> Self {
         State {
             state: StateWrapper::Connected(ConnectionState::new()),
@@ -119,6 +136,7 @@ impl State {
 }
 
 impl StateWrapper {
+    /// proceeds to the next state
     pub fn next(self) -> Self {
         match self {
             StateWrapper::Connected(val) => StateWrapper::ChallengeSent(val.into()),
@@ -126,6 +144,8 @@ impl StateWrapper {
             StateWrapper::Done(val) => StateWrapper::Connected(val.into()),
         }
     }
+
+    /// calls the `process` function for a relevant state
     pub fn process(&mut self, line: &str, db: &Db, difficulty: u8) -> Result<Option<Response>, SimpleError> {
         match self {
             StateWrapper::Connected(val) => val.process(line, db, difficulty),

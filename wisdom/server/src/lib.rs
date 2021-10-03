@@ -13,10 +13,17 @@ mod state;
 use crate::db::Db;
 use crate::state::State;
 
-// a Response is just a simple string
-// it could be a struct encapsulating some specific fields as well
+/// a Response is just a simple string
+/// it could be a struct encapsulating some specific fields as well
 type Response = String;
 
+/// runs the server
+///
+/// # arguments
+///
+/// * `listener` - tcp listener
+/// * `db` - an Arc to the database instance
+/// * `difficulty` - difficulty level of the challenge
 pub async fn run(listener: TcpListener, db: Arc<Db>, difficulty: u8) -> Result<(), Box<dyn Error>> {
    // keep the track of a number of connections established
     let mut connection_id: u128 = 0;
@@ -50,6 +57,7 @@ pub async fn run(listener: TcpListener, db: Arc<Db>, difficulty: u8) -> Result<(
                                     break 'inner;
                                 }
                             }
+                            // proceed to the next state
                             current.state = current.state.next();
                         }
                         Err(err) => {

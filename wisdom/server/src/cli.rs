@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+/// a struct encapsulating command line arguments
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "wisdom server",

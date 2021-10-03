@@ -68,7 +68,7 @@ The client iteratively calculates the hash of the message and checks the conditi
 
 ### quotes database
 
-When the client solves the challenge, it is served with random quote from the database of quotes. One can provide his own database of quotes using a command line option. The format of the database is a text file containing each quote separated by a new line.
+When the client solves the challenge, it is served with random quote from the database of quotes. One can provide his own database of quotes using a command line option. The format of the database is a text file containing each quote separated by a new line. First line of the file is ignored.
 
 ### interactive mode
 
