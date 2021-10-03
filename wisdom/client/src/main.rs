@@ -9,6 +9,7 @@ mod cli;
 
 use cli::CommandLineArgs;
 
+/// entry point of the application
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn Error>> {
     // get the command line arguments
@@ -23,10 +24,14 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     let mut stream = BufReader::new(stream);
 
     loop {
+        // in "interactive mode" run in a loop until user decides to quit
+
         if interactive {
             print!("quote? (yes/no): ");
+            // no new line was printed therefore must flush manually
             io::Write::flush(&mut io::stdout())?;
 
+            // get user's input
             let choice: String = read!("{}\n");
             let choice = choice.trim().to_lowercase();
             if choice != "y" && choice != "yes" {
@@ -34,9 +39,14 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
             }
         }
 
+        // get the quote
         let quote = client::get_quote(&mut stream).await?;
+
+        // print it to stdout
         println!("{}", quote);
 
+        // in non-interactive mode quit immediatelly,
+        // otherwise, repeat the loop
         if !interactive {
             break;
         }

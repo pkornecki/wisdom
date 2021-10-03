@@ -74,7 +74,7 @@ When the client solves the challenge, it is served with random quote from the da
 
 By default, when the client gets the quote from the server, it prints the quote to the stdout and closes.
 
-If the `-i` command line flag is specified when running the client, it runs in the *interactive mode*. In this mode, the client asks the user if it should get the quote and, based on the user input, gets the quote or closes.
+If the `-i` command line flag is specified when running the client, it runs in the *interactive mode*. In this mode, the client asks the user if it should get the quote and, based on the user input, gets the quote or quits.
 
 ## docker
 

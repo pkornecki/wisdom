@@ -4,11 +4,16 @@ use std::error::Error;
 use common::challenge::Challenge;
 use common::command::Command;
 
+/// gets a quote using the stream provided
+///
+/// # arguments
+///
+/// * `stream` - read\write stream of data
 pub async fn get_quote<T>(stream: &mut T) -> Result<String, Box<dyn Error>>
 where
     T: AsyncBufRead + AsyncWriteExt + std::marker::Unpin,
 {
-        // send a request
+        // send a "GET" request
         stream.write_all(format!("{}\n", Command::GET).as_bytes()).await?;
 
         // parse the response
@@ -16,12 +21,14 @@ where
 
         // solve the challenge
         let answer = solve(&challenge)?;
+
+        // send the answer
         stream.write_all(answer.as_bytes()).await?;
 
         // parse the response
         let result = parse(stream).await?;
 
-        // send the confirmation
+        // send the "THX" confirmation
         stream.write_all(format!("{}\n", Command::THX).as_bytes()).await?;
 
         Ok(result)
