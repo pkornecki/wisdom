@@ -17,7 +17,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     let words = words.unwrap_or_else(|| PathBuf::from("words_of_wisdom.txt"));
 
     // create a listener
-    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
 
     // create a shared database instance
     // once crated, there is no need to guard it behind a mutex,
