@@ -8,5 +8,5 @@ authors = ["pkornecki@gmail.com"]
 
 [dependencies]
 rand = "0.8.4"
-sha1 = "0.6.0"
+sha2 = "0.9.8"
 simple-error = "0.2.3"

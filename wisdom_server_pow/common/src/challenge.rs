@@ -3,7 +3,7 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 use simple_error::bail;
 use rand::{distributions::Alphanumeric, Rng};
-use sha1::Sha1;
+use sha2::{Sha256, Digest};
 
 pub struct Challenge {
     num_zeros: u8,
@@ -29,14 +29,12 @@ impl Challenge {
             bail!("answer does not match the challenge");
         }
 
-        // calculate the sha1 of the answer
-        let mut sha1 = Sha1::new();
-        sha1.update(answer.to_string().as_bytes());
-        let digest = sha1.digest().to_string();
+        // calculate the digest of the answer
+        let digest = Sha256::digest(answer.to_string().as_bytes());
 
         // check if the digest satisfies the num_zeros requirement
         let pattern = (0..answer.num_zeros).map(|_| "0").collect::<String>();
-        if !digest.starts_with(&pattern) {
+        if !digest.starts_with(&pattern.as_bytes()) {
             bail!("verification failed");
         }
 
@@ -46,14 +44,13 @@ impl Challenge {
     pub fn solve(challenge: &str) -> Result<Self, Box<dyn Error>> {
         let mut answer = Self::from_str(&challenge)?;
         let pattern = (0..answer.num_zeros).map(|_| "0").collect::<String>();
-        let mut sha1 = Sha1::new();
+        let mut hasher = Sha256::new();
 
         loop {
-            sha1.reset();
-            sha1.update(answer.to_string().as_bytes());
-            let digest = sha1.digest().to_string();
+            hasher.update(answer.to_string().as_bytes());
+            let digest = hasher.finalize_reset();
 
-            if digest.starts_with(&pattern) {
+            if digest.starts_with(&pattern.as_bytes()) {
                 break;
             }
 
