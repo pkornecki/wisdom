@@ -8,7 +8,7 @@ use simple_error::{bail, SimpleError};
 
 pub struct ConnectionState<T> {
     challenge: Option<Challenge>,
-    state: T,
+    _state: T,
 }
 
 pub struct Connected {}
@@ -19,7 +19,7 @@ impl ConnectionState<Connected> {
     fn new() -> Self {
         ConnectionState {
             challenge: None,
-            state: Connected {},
+            _state: Connected {},
         }
     }
 
@@ -77,7 +77,7 @@ impl From<ConnectionState<Connected>> for ConnectionState<ChallengeSent> {
     fn from(val: ConnectionState<Connected>) -> ConnectionState<ChallengeSent> {
         ConnectionState {
             challenge: val.challenge,
-            state: ChallengeSent {},
+            _state: ChallengeSent {},
         }
     }
 }
@@ -86,7 +86,7 @@ impl From<ConnectionState<ChallengeSent>> for ConnectionState<Done> {
     fn from(val: ConnectionState<ChallengeSent>) -> ConnectionState<Done> {
         ConnectionState {
             challenge: val.challenge,
-            state: Done {},
+            _state: Done {},
         }
     }
 }
@@ -95,7 +95,7 @@ impl From<ConnectionState<Done>> for ConnectionState<Connected> {
     fn from(_val: ConnectionState<Done>) -> ConnectionState<Connected> {
         ConnectionState {
             challenge: None,
-            state: Connected {},
+            _state: Connected {},
         }
     }
 }
