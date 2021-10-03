@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Result};
 
+/// an enum with command names
 #[derive(Debug)]
 pub enum Command {
     GET, // get
