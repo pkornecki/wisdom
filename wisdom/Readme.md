@@ -6,48 +6,49 @@ A project written in Rust that contains two applications:
 
 ## wisdom-server
 
-> wisdom server 0.1.0
-> a server providing words of wisdom to its clients
-> it requires that clients implement proof of work algorithm and solve the challenge
-> 
-> USAGE:
->     server [OPTIONS]
-> 
-> FLAGS:
->     -h, --help       Prints help information
->     -V, --version    Prints version information
-> 
-> OPTIONS:
->     -d, --difficulty <difficulty>    difficulty setting
->     -p, --port <port>                port to run on
->     -w, --words <words>              database location (txt)
+```
+wisdom server 0.1.0
+a server providing words of wisdom to its clients
+it requires that clients implement proof of work algorithm and solve the challenge
+
+USAGE:
+    server [OPTIONS]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -d, --difficulty <difficulty>    difficulty setting
+    -p, --port <port>                port to run on
+    -w, --words <words>              database location (txt)
+```
 
 ## wisdom-client
 
-> wisdom client 0.1.0
-> a client for retreiving words of wisdom from the wisdom server
-> it implements a proof of work algorithm by solving a challenge sent by the server
-> 
-> USAGE:
->     client [FLAGS] [OPTIONS]
-> 
-> FLAGS:
->     -h, --help           Prints help information
->     -i, --interactive    interactive mode
->     -V, --version        Prints version information
-> 
-> OPTIONS:
->     -a, --addr <addr>    ip address of the server
->     -p, --port <port>    port to connect to
+```
+wisdom client 0.1.0
+a client for retreiving words of wisdom from the wisdom server
+it implements a proof of work algorithm by solving a challenge sent by the server
+
+USAGE:
+    client [FLAGS] [OPTIONS]
+
+FLAGS:
+    -h, --help           Prints help information
+    -i, --interactive    interactive mode
+    -V, --version        Prints version information
+
+OPTIONS:
+    -a, --addr <addr>    ip address of the server
+    -p, --port <port>    port to connect to
+```
 
 ### the protocol of communication
 
 1. client initiates a connection
 2. client sends `GET`
-3. server sends `SLV 2:zC9iarFfZP34DYPutwnh4PMb6YVUmH:0` where
-- 2 is the number of zero *bytes* the hash must start with
-- zC9iarFfZP34DYPutwnh4PMb6YVUmH is a randomly generated text
-- 0 is the initial counter value
+3. server sends `SLV 2:zC9iarFfZP34DYPutwnh4PMb6YVUmH:0`
 4. client sends `2:zC9iarFfZP34DYPutwnh4PMb6YVUmH:18950`
 5. server sends `QUO “Always Do What You Are Afraid To Do” – Ralph Waldo Emerson`
 6. client sends `THX`
@@ -81,12 +82,16 @@ The Dockerfiles for both the server and the client are provided.
 
 ### building
 
-> docker build -t wisdom-server -f dockerfiles/server/Dockerfile .
-> docker build -t wisdom-client -f dockerfiles/client/Dockerfile .
+```
+docker build -t wisdom-server -f dockerfiles/server/Dockerfile .
+docker build -t wisdom-client -f dockerfiles/client/Dockerfile .
+```
 
 ### running
 
-> docker run -p 3962:3962 --rm wisdom-server
-> docker run -ti --rm wisdom-client -a 172.17.0.2
+```
+docker run -p 3962:3962 wisdom-server
+docker run -ti wisdom-client -a 172.17.0.2
+```
 
 When running in a container, the client should know the address of the server.
