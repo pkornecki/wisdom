@@ -62,9 +62,9 @@ The server sends `SLV 2:zC9iarFfZP34DYPutwnh4PMb6YVUmH:0` where
 - `zC9iarFfZP34DYPutwnh4PMb6YVUmH` is a randomly generated text
 - `0` is the initial counter value
 
-The difficulty of the challenge can be specified as the command line optoin. It defines the minumun number of zero bytes that the hash of the challenge must start with.
+The difficulty of the challenge can be specified as the command line option. It defines the minumun number of zero bytes that the hash of the challenge must start with.
 
-The client iteratively calculates the hash of the message and checks the condition. If the condition is met, that is, the hash starts with at least the number of zero bytes specified (in this example, at least two leading zeros), the answer is found. If the condition is not met, the client increments the counter and repeats the steps - over and over again, until the solution if found.
+The client iteratively calculates the hash of the message and checks the condition. If the condition is met, that is, the hash starts with at least the number of zero bytes specified (in this example, at least two leading zeros), the answer is found. If the condition is not met, the client increments the counter and repeats the steps - over and over again, until the solution is found.
 
 ### quotes database
 
