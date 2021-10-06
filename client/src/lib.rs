@@ -62,7 +62,7 @@ where
 
 // solve the challenge
 fn solve(challenge: &str) -> Result<String, Box<dyn Error>> {
-    let answer = Challenge::solve(&challenge)?;
+    let answer = Challenge::solve(challenge)?;
     let answer = format!("{}\n", answer.to_string());
     Ok(answer)
 }

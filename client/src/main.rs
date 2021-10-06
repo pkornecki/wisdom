@@ -15,7 +15,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     // get the command line arguments
     let CommandLineArgs { addr, port, interactive } = CommandLineArgs::from_args();
     let addr = addr.unwrap_or_else(|| "127.0.0.1".to_string());
-    let port = port.unwrap_or_else(|| 3962);
+    let port = port.unwrap_or(3962);
 
     // establish a connection to the server
     let stream = TcpStream::connect(format!("{}:{}", addr, port)).await?;

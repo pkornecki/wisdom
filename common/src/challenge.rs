@@ -44,7 +44,7 @@ impl Challenge {
 
         // check if the digest satisfies the num_zeros requirement
         let pattern = (0..answer.num_zeros).map(|_| "0").collect::<String>();
-        if !digest.starts_with(&pattern.as_bytes()) {
+        if !digest.starts_with(pattern.as_bytes()) {
             bail!("verification failed");
         }
 
@@ -58,7 +58,7 @@ impl Challenge {
     /// * `challenge` - represented as a string
     pub fn solve(challenge: &str) -> Result<Self, Box<dyn Error>> {
         // parse the string
-        let mut answer = Self::from_str(&challenge)?;
+        let mut answer = Self::from_str(challenge)?;
 
         // repeat the required number of zeros
         let pattern = (0..answer.num_zeros).map(|_| "0").collect::<String>();
@@ -74,7 +74,7 @@ impl Challenge {
             let digest = hasher.finalize_reset();
 
             // check if the condition is met
-            if digest.starts_with(&pattern.as_bytes()) {
+            if digest.starts_with(pattern.as_bytes()) {
                 break;
             }
 

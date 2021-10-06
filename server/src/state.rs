@@ -53,7 +53,7 @@ impl ConnectionState<ChallengeSent> {
             .expect("challenge missing")
             .verify(line)
         {
-            let quote = Self::get_quote(&db)?;
+            let quote = Self::get_quote(db)?;
             return Ok(Some(format!("{} {}", Command::QUO, quote)));
         }
 

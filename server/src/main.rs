@@ -13,8 +13,8 @@ use cli::CommandLineArgs;
 pub async fn main() -> Result<(), Box<dyn Error>> {
     // get the command line arguments
     let CommandLineArgs { port, difficulty, words } = CommandLineArgs::from_args();
-    let port = port.unwrap_or_else(|| 3962);
-    let difficulty = difficulty.unwrap_or_else(|| 3);
+    let port = port.unwrap_or(3962);
+    let difficulty = difficulty.unwrap_or(3);
     let words = words.unwrap_or_else(|| PathBuf::from("words_of_wisdom.txt"));
 
     // create a listener
